@@ -19,46 +19,54 @@ const menu = () => {
     message: "What would you like to do?",
     choices: [
       "View Employees",
-      "Add Employee",
       "View Roles",
-      "Add Role",
       "View Departments",
-      "Add Department",
-      "Update Employee Manager",
-      "Update Employee Role",
       "View Employees by Manager",
-      "Remove Employee"]
+      "Update Employee Role",
+      "Update Employee Manager",
+      "Add Employee",
+      "Add Role",
+      "Add Department",
+      "Remove Employee",
+      "Remove Role",
+      "Remove Department"]
   }).then(resp => {
     switch(resp.menu){
       case "View Employees":
         viewEmployees();
         break;
-      case "Add Employee":
-        addEmployee();
-        break;
       case "View Roles":
         viewRoles();
-        break;
-      case "Add Role":
-        addRole();
         break;
       case "View Departments":
         viewDepartments();
         break;
-      case "Add Department":
-        addDepartment();
-        break;
-      case "Update Employee Manager":
-        updateManager();
-        break;
+      case "View Employees by Manager":
+        viewByManager();
+        break;    
       case "Update Employee Role":
         updateRole();
         break;
-      case "View Employees by Manager":
-        viewByManager();
+      case "Update Employee Manager":
+        updateManager();
+        break;  
+      case "Add Employee":
+        addEmployee();
+        break;
+      case "Add Role":
+        addRole();
+        break;
+      case "Add Department":
+        addDepartment();
         break;
       case "Remove Employee":
         deleteEmployee();
+        break;
+      case "Remove Role":
+        deleteRole();
+        break;
+      case "Remove Department":
+        deleteDepartment();
         break;
     };
   });
@@ -79,82 +87,6 @@ const viewEmployees = () => {
   });
 };
 
-const viewByManager = () => {
-  connection.query(`SELECT CONCAT(manager.first_name, ' ', manager.last_name) AS manager, CONCAT(employee.first_name, ' ', employee.last_name) AS employee FROM employee
-  LEFT JOIN employee manager ON manager.id = employee.manager_id
-  ORDER BY manager DESC`, (err, res) => {
-    if(err) throw err;
-    console.table(res);
-    let interval = setInterval(() => {
-      menu();
-      clearInterval(interval);
-    }, 2000);
-  });
-};
-
-const addEmployee = () => {
-  connection.query('SELECT * FROM role', (err, res) => {
-    if(err) throw err;
-    let roles = res.map((role) => {
-      return {
-        name: role.title,
-        value: role.id
-      };
-    });
-    
-    connection.query('SELECT * FROM employee', (err, res) => {
-      if(err) throw err;
-      let managers = res.map((manager) => {
-        return {
-          name: `${manager.first_name} ${manager.last_name}`,
-          value: manager.id
-        };
-      });
-
-      inquirer.prompt([
-        {
-          name: 'first_name',
-          type: 'input',
-          message: "Enter the employee's first name."
-        },
-        {
-          name: 'last_name',
-          type: 'input',
-          message: "Enter the employee's last name."
-        },
-        {
-          name: 'role_id',
-          type: 'list',
-          message: "Select the role of the employee.",
-          choices: roles
-        },
-        {
-          name: 'manager_id',
-          type: 'list',
-          message: "Select the employee's manager.",
-          choices: managers
-        }
-      ]).then(res => {
-        connection.query('INSERT INTO employee SET ?', {
-          first_name: res.first_name,
-          last_name: res.last_name,
-          role_id: res.role_id,
-          manager_id: res.manager_id
-        },
-        function (err, res){
-          if(err) throw err;
-        });
-        console.log("Employee successfully added.");
-        
-        let interval = setInterval(() => {
-          menu();
-          clearInterval(interval);
-        }, 2000);
-      });
-    });
-  });
-};
-
 const viewRoles = () => {
   connection.query(`SELECT role.id, role.title AS role,
   department.name AS department FROM role
@@ -170,50 +102,6 @@ const viewRoles = () => {
   });
 };
 
-const addRole = () => {
-  connection.query('SELECT * FROM department', (err, res) => {
-    if(err) throw err;
-    let departments = res.map((department) => {
-      return {
-        name: department.name,
-        value: department.id
-      };
-    });
-    inquirer.prompt([
-      {
-        name: 'title',
-        type: 'input',
-        message: "Enter the title of the role."
-      },
-      {
-        name: 'salary',
-        type: 'input',
-        message: "Enter the salary of the role."
-      },
-      {
-        name: 'department_id',
-        type: 'list',
-        message: "Select the department the role will be in.",
-        choices: departments
-      }
-    ]).then(res => {
-      connection.query('INSERT INTO role SET ?', {
-        title: res.title,
-        salary: res.salary,
-        department_id: res.department_id
-      },
-        function(err, res){
-          if(err) throw err;
-        });
-        console.log("Role successfully added.");
-      let interval = setInterval(() => {
-        menu();
-        clearInterval(interval);
-      }, 2000);
-    });
-  });
-};
-
 const viewDepartments = () => {
   connection.query('SELECT * FROM department', (err, res) => {
     if(err) throw err;
@@ -225,22 +113,12 @@ const viewDepartments = () => {
   });
 };
 
-const addDepartment = () => {
-  inquirer.prompt(
-    {
-      name: 'name',
-      type: 'input',
-      message: "Enter the name of the department."
-    }
-  ).then(res => {
-    console.log("add department res", res);
-    let query = connection.query('INSERT INTO department SET ?', {
-      name: res.name
-    },
-      function(err, res){
-        if(err) throw err;
-      });
-    console.log("Department added successfully.");
+const viewByManager = () => {
+  connection.query(`SELECT CONCAT(manager.first_name, ' ', manager.last_name) AS manager, CONCAT(employee.first_name, ' ', employee.last_name) AS employee FROM employee
+  LEFT JOIN employee manager ON manager.id = employee.manager_id
+  ORDER BY manager DESC`, (err, res) => {
+    if(err) throw err;
+    console.table(res);
     let interval = setInterval(() => {
       menu();
       clearInterval(interval);
@@ -356,6 +234,136 @@ const updateManager = () => {
   });
 };
 
+const addEmployee = () => {
+  connection.query('SELECT * FROM role', (err, res) => {
+    if(err) throw err;
+    let roles = res.map((role) => {
+      return {
+        name: role.title,
+        value: role.id
+      };
+    });
+    
+    connection.query('SELECT * FROM employee', (err, res) => {
+      if(err) throw err;
+      let managers = res.map((manager) => {
+        return {
+          name: `${manager.first_name} ${manager.last_name}`,
+          value: manager.id
+        };
+      });
+
+      inquirer.prompt([
+        {
+          name: 'first_name',
+          type: 'input',
+          message: "Enter the employee's first name."
+        },
+        {
+          name: 'last_name',
+          type: 'input',
+          message: "Enter the employee's last name."
+        },
+        {
+          name: 'role_id',
+          type: 'list',
+          message: "Select the role of the employee.",
+          choices: roles
+        },
+        {
+          name: 'manager_id',
+          type: 'list',
+          message: "Select the employee's manager.",
+          choices: managers
+        }
+      ]).then(res => {
+        connection.query('INSERT INTO employee SET ?', {
+          first_name: res.first_name,
+          last_name: res.last_name,
+          role_id: res.role_id,
+          manager_id: res.manager_id
+        },
+        function (err, res){
+          if(err) throw err;
+        });
+        console.log("Employee successfully added.");
+        
+        let interval = setInterval(() => {
+          menu();
+          clearInterval(interval);
+        }, 2000);
+      });
+    });
+  });
+};
+
+const addRole = () => {
+  connection.query('SELECT * FROM department', (err, res) => {
+    if(err) throw err;
+    let departments = res.map((department) => {
+      return {
+        name: department.name,
+        value: department.id
+      };
+    });
+    inquirer.prompt([
+      {
+        name: 'title',
+        type: 'input',
+        message: "Enter the title of the role."
+      },
+      {
+        name: 'salary',
+        type: 'input',
+        message: "Enter the salary of the role."
+      },
+      {
+        name: 'department_id',
+        type: 'list',
+        message: "Select the department the role will be in.",
+        choices: departments
+      }
+    ]).then(res => {
+      connection.query('INSERT INTO role SET ?', {
+        title: res.title,
+        salary: res.salary,
+        department_id: res.department_id
+      },
+        function(err, res){
+          if(err) throw err;
+        });
+        console.log("Role successfully added.");
+      let interval = setInterval(() => {
+        menu();
+        clearInterval(interval);
+      }, 2000);
+    });
+  });
+};
+
+const addDepartment = () => {
+  inquirer.prompt(
+    {
+      name: 'name',
+      type: 'input',
+      message: "Enter the name of the department."
+    }
+  ).then(res => {
+    console.log("add department res", res);
+    let query = connection.query('INSERT INTO department SET ?', {
+      name: res.name
+    },
+      function(err, res){
+        if(err) throw err;
+      });
+    console.log("Department added successfully.");
+    let interval = setInterval(() => {
+      menu();
+      clearInterval(interval);
+    }, 2000);
+  });
+};
+
 const deleteEmployee = () => {
   connection.query('SELECT * FROM employee', (err, res) => {
     if(err) throw err;
@@ -388,6 +396,72 @@ const deleteEmployee = () => {
     });
   });
 }
+
+const deleteRole = () => {
+  connection.query('SELECT * FROM role', (err, res) => {
+    if(err) throw err;
+    let roles = res.map((role) => {
+      return {
+        name: role.title,
+        value: role.id
+      };
+    });
+    inquirer.prompt([
+      {
+        name: 'role',
+        type: 'list',
+        message: "Select the role that will be removed.",
+        choices: roles
+      }
+    ]).then((res) => {
+      connection.query('DELETE FROM role WHERE ?', 
+        {
+          id: res.role
+        },
+      function(err) {
+        if(err) throw err;
+      });
+      console.log("Role removed successfully.");
+      let interval = setInterval(() => {
+        menu();
+        clearInterval(interval);
+      }, 2000);
+    });
+  });
+};
+
+const deleteDepartment = () => {
+  connection.query('SELECT * FROM department', (err, res) => {
+    if(err) throw err;
+    let departments = res.map((department) => {
+      return {
+        name: department.name,
+        value: department.id
+      };
+    });
+    inquirer.prompt([
+      {
+        name: 'department',
+        type: 'list',
+        message: "Select the department that will be removed.",
+        choices: departments
+      }
+    ]).then((res) => {
+      connection.query('DELETE FROM department WHERE ?', 
+        {
+          id: res.department
+        },
+      function(err) {
+        if(err) throw err;
+      });
+      console.log("Department removed successfully.");
+      let interval = setInterval(() => {
+        menu();
+        clearInterval(interval);
+      }, 2000);
+    });
+  });
+};
 
 connection.connect((err) => {
   if(err) throw err;
