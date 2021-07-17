@@ -29,5 +29,5 @@ VALUES
     ('Randy', 'Marsh', 4, 3),
     ('Laurana', 'Kanan', 5, NULL),
     ('Yamato', 'Oden', 6, 5),
-    ('Kearney', 'Erickson', 7, NULL),
-    ('Samus', 'Aran', 8, 7);
+    ('Samus', 'Aran', 7, NULL),
+    ('Tommy', 'Bahama', 8, 7);

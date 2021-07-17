@@ -12,6 +12,7 @@ const connection = mysql.createConnection({
   database: 'employees_db',
 });
 
+// all initial menu options and their respective functions
 const menu = () => {
   inquirer.prompt({
     name: 'menu',
@@ -76,6 +77,7 @@ const menu = () => {
   });
 };
 
+// all employee information - the most comprehensive view function
 const viewEmployees = () => {
   connection.query(`SELECT employee.id, CONCAT(employee.first_name, ' ', employee.last_name) AS employee, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee
   LEFT JOIN employee manager ON manager.id = employee.manager_id
@@ -88,6 +90,7 @@ const viewEmployees = () => {
   });
 };
 
+// all roles and the departments they're in
 const viewRoles = () => {
   connection.query(`SELECT role.id, role.title AS role,
   department.name AS department FROM role
@@ -99,6 +102,7 @@ const viewRoles = () => {
   });
 };
 
+// all the departments
 const viewDepartments = () => {
   connection.query('SELECT * FROM department', (err, res) => {
     if(err) throw err;
@@ -107,6 +111,7 @@ const viewDepartments = () => {
   });
 };
 
+// all employees displayed by manager - includes those without managers (null)
 const viewByManager = () => {
   connection.query(`SELECT CONCAT(manager.first_name, ' ', manager.last_name) AS manager, CONCAT(employee.first_name, ' ', employee.last_name) AS employee FROM employee
   LEFT JOIN employee manager ON manager.id = employee.manager_id
@@ -117,6 +122,7 @@ const viewByManager = () => {
   });
 };
 
+// all departments and their total salary budgets
 const viewDepartmentBudget = () => {
   connection.query(`SELECT department.name AS department, SUM(role.salary) AS budget FROM employee
   JOIN role ON(role.id = employee.role_id)
@@ -128,6 +134,7 @@ const viewDepartmentBudget = () => {
   });
 };
 
+// change the role of an employee
 const updateRole = () => {
   connection.query('SELECT * FROM employee', (err, res) => {
     if(err) throw err;
@@ -179,6 +186,7 @@ const updateRole = () => {
   });
 };
 
+// change the manager of an employee
 const updateManager = () => {
   connection.query('SELECT * FROM employee', (err, res) => {
     if(err) throw err;
@@ -227,6 +235,7 @@ const updateManager = () => {
   });
 };
 
+// create new employee
 const addEmployee = () => {
   connection.query('SELECT * FROM role', (err, res) => {
     if(err) throw err;
@@ -286,6 +295,7 @@ const addEmployee = () => {
   });
 };
 
+// create new role
 const addRole = () => {
   connection.query('SELECT * FROM department', (err, res) => {
     if(err) throw err;
@@ -328,6 +338,7 @@ const addRole = () => {
   });
 };
 
+// create new department
 const addDepartment = () => {
   inquirer.prompt(
     {
@@ -336,8 +347,7 @@ const addDepartment = () => {
       message: "Enter the name of the department."
     }
   ).then(res => {
-    console.log("add department res", res);
-    let query = connection.query('INSERT INTO department SET ?', {
+    connection.query('INSERT INTO department SET ?', {
       name: res.name
     },
     function(err, res){
@@ -348,6 +358,7 @@ const addDepartment = () => {
   });
 };
 
+// remove employee
 const deleteEmployee = () => {
   connection.query('SELECT * FROM employee', (err, res) => {
     if(err) throw err;
@@ -378,6 +389,7 @@ const deleteEmployee = () => {
   });
 }
 
+// remove role - this also removes any employees with selected role assigned
 const deleteRole = () => {
   connection.query('SELECT * FROM role', (err, res) => {
     if(err) throw err;
@@ -408,6 +420,7 @@ const deleteRole = () => {
   });
 };
 
+// remove department - this also removes all employees currently assigned to selected department
 const deleteDepartment = () => {
   connection.query('SELECT * FROM department', (err, res) => {
     if(err) throw err;
@@ -438,6 +451,7 @@ const deleteDepartment = () => {
   });
 };
 
+// returns the main menu after a selection is made
 const timedReturn = () => {
   let interval = setInterval(() => {
     menu();
