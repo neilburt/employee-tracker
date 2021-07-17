@@ -22,6 +22,7 @@ const menu = () => {
       "View Roles",
       "View Departments",
       "View Employees by Manager",
+      "View Department Budget",
       "Update Employee Role",
       "Update Employee Manager",
       "Add Employee",
@@ -43,6 +44,9 @@ const menu = () => {
         break;
       case "View Employees by Manager":
         viewByManager();
+        break;
+      case "View Department Budget":
+        viewDepartmentBudget();
         break;    
       case "Update Employee Role":
         updateRole();
@@ -80,10 +84,7 @@ const viewEmployees = () => {
   ORDER BY role.id`, (err, res) => {
     if(err) throw err;
     console.table(res);
-    let interval = setInterval(() => {
-      menu();
-      clearInterval(interval);
-    }, 2000);
+    timedReturn();
   });
 };
 
@@ -94,11 +95,7 @@ const viewRoles = () => {
   ORDER BY department.id`, (err, res) => {
     if(err) throw err;
     console.table(res);
-    
-    let interval = setInterval(() => {
-      menu();
-      clearInterval(interval);
-    }, 2000);
+    timedReturn();
   });
 };
 
@@ -106,10 +103,7 @@ const viewDepartments = () => {
   connection.query('SELECT * FROM department', (err, res) => {
     if(err) throw err;
     console.table(res);
-    let interval = setInterval(() => {
-      menu();
-      clearInterval(interval);
-    }, 2000);
+    timedReturn();
   });
 };
 
@@ -119,10 +113,18 @@ const viewByManager = () => {
   ORDER BY manager DESC`, (err, res) => {
     if(err) throw err;
     console.table(res);
-    let interval = setInterval(() => {
-      menu();
-      clearInterval(interval);
-    }, 2000);
+    timedReturn();
+  });
+};
+
+const viewDepartmentBudget = () => {
+  connection.query(`SELECT department.name AS department, SUM(role.salary) AS budget FROM employee
+  JOIN role ON(role.id = employee.role_id)
+  JOIN department ON(department.id = role.department_id)
+  GROUP BY department.name`, (err, res) => {
+    if(err) throw err;
+    console.table(res);
+    timedReturn();
   });
 };
 
@@ -169,12 +171,9 @@ const updateRole = () => {
         ],
         function(err) {
           if(err) throw err;
+          console.log("Employee role updated successfully.");
+          timedReturn();
         });
-        console.log("Employee role updated successfully.");
-        let interval = setInterval(() => {
-          menu();
-          clearInterval(interval);
-        }, 2000);
       });
     });
   });
@@ -189,29 +188,27 @@ const updateManager = () => {
         value: employee.id
       };
     });
-
-    connection.query('SELECT * FROM employee', (err, res) => {
-      if(err) throw err;
-      let managers = res.map((manager) => {
-        return {
-          name: `${manager.first_name} ${manager.last_name}`,
-          value: manager.id
-        };
-      });
-      
-      inquirer.prompt([
-        {
-          name: 'employee',
-          type: 'list',
-          message: "Select the employee whose manager you would like to update.",
-          choices: employees
-        },
-        {
-            name: 'manager',
-            type: 'list',
-            message: "Select the new manager for the employee.",
-            choices: managers
-        }
+    
+    let managers = res.map((manager) => {
+      return {
+        name: `${manager.first_name} ${manager.last_name}`,
+        value: manager.id
+      };
+    });
+    
+    inquirer.prompt([
+      {
+        name: 'employee',
+        type: 'list',
+        message: "Select the employee whose manager you would like to update.",
+        choices: employees
+      },
+      {
+        name: 'manager',
+        type: 'list',
+        message: "Select the new manager for the employee.",
+        choices: managers
+      }
       ]).then((res) => {
         connection.query('UPDATE employee SET ? WHERE ?', [
           {
@@ -223,14 +220,10 @@ const updateManager = () => {
         ],
         function(err) {
           if(err) throw err;
+          console.log("Employee manager updated successfully.");
+          timedReturn();
         });
-        console.log("Employee manager updated successfully.");
-        let interval = setInterval(() => {
-          menu();
-          clearInterval(interval);
-        }, 2000);
       });
-    });
   });
 };
 
@@ -285,13 +278,9 @@ const addEmployee = () => {
         },
         function (err, res){
           if(err) throw err;
+          console.log("Employee successfully added.");
+          timedReturn();
         });
-        console.log("Employee successfully added.");
-        
-        let interval = setInterval(() => {
-          menu();
-          clearInterval(interval);
-        }, 2000);
       });
     });
   });
@@ -306,6 +295,7 @@ const addRole = () => {
         value: department.id
       };
     });
+
     inquirer.prompt([
       {
         name: 'title',
@@ -329,14 +319,11 @@ const addRole = () => {
         salary: res.salary,
         department_id: res.department_id
       },
-        function(err, res){
-          if(err) throw err;
-        });
+      function(err, res){
+        if(err) throw err;
         console.log("Role successfully added.");
-      let interval = setInterval(() => {
-        menu();
-        clearInterval(interval);
-      }, 2000);
+        timedReturn();
+      });
     });
   });
 };
@@ -353,14 +340,11 @@ const addDepartment = () => {
     let query = connection.query('INSERT INTO department SET ?', {
       name: res.name
     },
-      function(err, res){
-        if(err) throw err;
-      });
-    console.log("Department added successfully.");
-    let interval = setInterval(() => {
-      menu();
-      clearInterval(interval);
-    }, 2000);
+    function(err, res){
+      if(err) throw err;
+      console.log("Department added successfully.");
+      timedReturn();
+    });
   });
 };
 
@@ -387,12 +371,9 @@ const deleteEmployee = () => {
         },
       function(err) {
         if(err) throw err;
+        console.log("Employee removed successfully.");
+        timedReturn();
       });
-      console.log("Employee removed successfully.");
-      let interval = setInterval(() => {
-        menu();
-        clearInterval(interval);
-      }, 2000);
     });
   });
 }
@@ -420,12 +401,9 @@ const deleteRole = () => {
         },
       function(err) {
         if(err) throw err;
+        console.log("Role removed successfully.");
+        timedReturn();
       });
-      console.log("Role removed successfully.");
-      let interval = setInterval(() => {
-        menu();
-        clearInterval(interval);
-      }, 2000);
     });
   });
 };
@@ -453,14 +431,18 @@ const deleteDepartment = () => {
         },
       function(err) {
         if(err) throw err;
+        console.log("Department removed successfully.");
+        timedReturn();
       });
-      console.log("Department removed successfully.");
-      let interval = setInterval(() => {
-        menu();
-        clearInterval(interval);
-      }, 2000);
     });
   });
+};
+
+const timedReturn = () => {
+  let interval = setInterval(() => {
+    menu();
+    clearInterval(interval);
+  }, 2000);
 };
 
 connection.connect((err) => {
