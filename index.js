@@ -24,7 +24,9 @@ const menu = () => {
       "Add Role",
       "View Departments",
       "Add Department",
-      "Update Employee Role"]
+      "Update Employee Manager",
+      "Update Employee Role",
+      "View Employees by Manager"]
   }).then(resp => {
     switch(resp.menu){
       case "View Employees":
@@ -45,15 +47,38 @@ const menu = () => {
       case "Add Department":
         addDepartment();
         break;
+      case "Update Employee Manager":
+        updateManager();
+        break;
       case "Update Employee Role":
         updateRole();
+        break;
+      case "View Employees by Manager":
+        viewByManager();
         break;
     };
   });
 };
 
 const viewEmployees = () => {
-  connection.query('SELECT * FROM employee', (err, res) => {
+  connection.query(`SELECT employee.id, CONCAT(employee.first_name, ' ', employee.last_name) AS employee, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee
+  LEFT JOIN employee manager ON manager.id = employee.manager_id
+  JOIN role ON(role.id = employee.role_id)
+  JOIN department ON(department.id = role.department_id)
+  ORDER BY role.id`, (err, res) => {
+    if(err) throw err;
+    console.table(res);
+    let interval = setInterval(() => {
+      menu();
+      clearInterval(interval);
+    }, 2000);
+  });
+};
+
+const viewByManager = () => {
+  connection.query(`SELECT CONCAT(manager.first_name, ' ', manager.last_name) AS manager, CONCAT(employee.first_name, ' ', employee.last_name) AS employee FROM employee
+  LEFT JOIN employee manager ON manager.id = employee.manager_id
+  ORDER BY manager DESC`, (err, res) => {
     if(err) throw err;
     console.table(res);
     let interval = setInterval(() => {
@@ -106,8 +131,7 @@ const addEmployee = () => {
           choices: managers
         }
       ]).then(res => {
-        console.log("add employee res", res);
-        let query = connection.query('INSERT INTO employee SET ?', {
+        connection.query('INSERT INTO employee SET ?', {
           first_name: res.first_name,
           last_name: res.last_name,
           role_id: res.role_id,
@@ -116,7 +140,7 @@ const addEmployee = () => {
         function (err, res){
           if(err) throw err;
         });
-        console.log("values", query.values);
+        console.log("Employee successfully added.");
         
         let interval = setInterval(() => {
           menu();
@@ -128,7 +152,10 @@ const addEmployee = () => {
 };
 
 const viewRoles = () => {
-  connection.query('SELECT * FROM role', (err, res) => {
+  connection.query(`SELECT role.id, role.title AS role,
+  department.name AS department FROM role
+  LEFT JOIN department ON role.department_id = department.id
+  ORDER BY department.id`, (err, res) => {
     if(err) throw err;
     console.table(res);
     
@@ -144,7 +171,7 @@ const addRole = () => {
     if(err) throw err;
     let departments = res.map((department) => {
       return {
-        name: department.title,
+        name: department.name,
         value: department.id
       };
     });
@@ -166,17 +193,15 @@ const addRole = () => {
         choices: departments
       }
     ]).then(res => {
-      console.log("add role res", res);
-      let query = connection.query('INSERT INTO role SET ?', {
+      connection.query('INSERT INTO role SET ?', {
         title: res.title,
         salary: res.salary,
         department_id: res.department_id
       },
         function(err, res){
           if(err) throw err;
-        }
-      );
-      console.log("values", query.value);
+        });
+        console.log("Role successfully added.");
       let interval = setInterval(() => {
         menu();
         clearInterval(interval);
@@ -210,9 +235,8 @@ const addDepartment = () => {
     },
       function(err, res){
         if(err) throw err;
-      }
-    );
-    console.log("values", query.value);
+      });
+    console.log("Department added successfully.");
     let interval = setInterval(() => {
       menu();
       clearInterval(interval);
@@ -265,6 +289,60 @@ const updateRole = () => {
           if(err) throw err;
         });
         console.log("Employee role updated successfully.");
+        let interval = setInterval(() => {
+          menu();
+          clearInterval(interval);
+        }, 2000);
+      });
+    });
+  });
+};
+
+const updateManager = () => {
+  connection.query('SELECT * FROM employee', (err, res) => {
+    if(err) throw err;
+    let employees = res.map((employee) => {
+      return {
+        name: `${employee.first_name} ${employee.last_name}`,
+        value: employee.id
+      };
+    });
+
+    connection.query('SELECT * FROM employee', (err, res) => {
+      if(err) throw err;
+      let managers = res.map((manager) => {
+        return {
+          name: `${manager.first_name} ${manager.last_name}`,
+          value: manager.id
+        };
+      });
+      
+      inquirer.prompt([
+        {
+          name: 'employee',
+          type: 'list',
+          message: "Select the employee whose manager you would like to update.",
+          choices: employees
+        },
+        {
+            name: 'manager',
+            type: 'list',
+            message: "Select the new manager for the employee.",
+            choices: managers
+        }
+      ]).then((res) => {
+        connection.query('UPDATE employee SET ? WHERE ?', [
+          {
+            manager_id: res.manager
+          },
+          {
+            id: res.employee
+          }
+        ],
+        function(err) {
+          if(err) throw err;
+        });
+        console.log("Employee manager updated successfully.");
         let interval = setInterval(() => {
           menu();
           clearInterval(interval);
