@@ -26,7 +26,8 @@ const menu = () => {
       "Add Department",
       "Update Employee Manager",
       "Update Employee Role",
-      "View Employees by Manager"]
+      "View Employees by Manager",
+      "Remove Employee"]
   }).then(resp => {
     switch(resp.menu){
       case "View Employees":
@@ -55,6 +56,9 @@ const menu = () => {
         break;
       case "View Employees by Manager":
         viewByManager();
+        break;
+      case "Remove Employee":
+        deleteEmployee();
         break;
     };
   });
@@ -351,6 +355,39 @@ const updateManager = () => {
     });
   });
 };
+
+const deleteEmployee = () => {
+  connection.query('SELECT * FROM employee', (err, res) => {
+    if(err) throw err;
+    let employees = res.map((employee) => {
+      return {
+        name: `${employee.first_name} ${employee.last_name}`,
+        value: employee.id
+      };
+    });
+    inquirer.prompt([
+      {
+        name: 'employee',
+        type: 'list',
+        message: "Select the employee that will be removed.",
+        choices: employees
+      }
+    ]).then((res) => {
+      connection.query('DELETE FROM employee WHERE ?', 
+        {
+          id: res.employee
+        },
+      function(err) {
+        if(err) throw err;
+      });
+      console.log("Employee removed successfully.");
+      let interval = setInterval(() => {
+        menu();
+        clearInterval(interval);
+      }, 2000);
+    });
+  });
+}
 
 connection.connect((err) => {
   if(err) throw err;
