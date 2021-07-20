@@ -23,15 +23,15 @@ Once the application is called by typing "node index.js" in the terminal, the us
 Check out this [demo video](https://drive.google.com/file/d/19K5MZBIZtR-hASK9Iqdd1FWEI6M-0G36/view?usp=sharing) to see it in action.  
 
 ## Screenshots  
-![Screenshot of Team Profile Generator being used in VS Code](./assets/images/screenshot.jpg)  
+![Screenshot of Employee Tracker being used in VS Code](./assets/images/screenshot.jpg)  
 
 ---  
 
-![Screenshot of Team Profile Generator being used in VS Code further along](./assets/images/screenshot2.jpg)  
+![Screenshot of Employee Tracker being used in VS Code further along](./assets/images/screenshot2.jpg)  
 
 ---  
 
-![Screenshot of Team Profile Generator finished in VS Code](./assets/images/screenshot3.jpg)  
+![Screenshot of Employee Tracker finished in VS Code](./assets/images/screenshot3.jpg)  
 
 ## Contributing  
 
